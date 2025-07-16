@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+
+# website url
+Disallow: /author
+Disallow: /settings
+
+# sitemap file
+Sitemap: https://zhishi.io/sitemap.xml
