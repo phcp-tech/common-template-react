@@ -2,7 +2,7 @@
 
 A production-ready React frontend template with multi-locale support (zh-Hans / en-US), dark mode, PWA, locale-prefixed routing, and legal pages.
 
-Extracted from [knowledge-hkc-web](../knowledge-hkc-web). The `core/` layer is fully portable — zero business-domain coupling, copy it to any new project.
+The `core/` layer is fully portable — zero business-domain coupling, copy it to any new project.
 
 ## Stack
 
@@ -106,7 +106,3 @@ npx vitest run src/core/lib/__tests__/
 npx vitest run src/core/i18n/__tests__/
 npx vitest run src/core/hooks/__tests__/
 ```
-
-## License
-
-MIT
