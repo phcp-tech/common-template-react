@@ -1,9 +1,7 @@
 # https://www.robotstxt.org/robotstxt.html
+# Allow all crawlers on all paths (nothing is disallowed).
+# robots.txt cannot "list every URL"; use Sitemap for discovery, and/or rely on links between pages.
 User-agent: *
+Disallow:
 
-# website url
-Disallow: /author
-Disallow: /settings
-
-# sitemap file
-Sitemap: https://zhishi.io/sitemap.xml
+Sitemap: https://hkc.wiki/sitemap.xml
