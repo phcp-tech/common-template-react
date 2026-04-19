@@ -1,10 +1,19 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+/**
+ * Client entry point — mounts the React SPA.
+ * No SSR hydration in the template; use createRoot unconditionally.
+ */
+import { createRoot } from "react-dom/client";
+import { MainApp } from "./router";
+import "./index.css";
+import "highlight.js/styles/github.css";
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const container = document.getElementById("root");
+if (!container) throw new Error("Missing #root container.");
+
+createRoot(container).render(<MainApp />);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
