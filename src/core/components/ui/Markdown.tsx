@@ -129,12 +129,17 @@ export function Markdown({ source, className }: MarkdownProps) {
               if (!isCheckbox) return <input {...props} />;
               return <input {...props} disabled />;
             },
+            pre: ({ children, ...props }) => (
+              <pre {...props} className="overflow-x-auto">
+                {children}
+              </pre>
+            ),
             img: ({ src, alt, ...props }) => (
               <img
                 src={src}
                 alt={alt ?? ""}
                 {...props}
-                className="cursor-zoom-in"
+                className="max-w-full h-auto cursor-zoom-in"
                 onClick={() => src && setLightbox({ src, alt: alt ?? "" })}
               />
             ),
