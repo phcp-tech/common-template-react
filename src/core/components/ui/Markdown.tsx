@@ -4,13 +4,11 @@
  * Layer: core/components/ui — stateless presentational atom.
  *
  * Pipeline:
- *   remark-gfm        → parse GitHub Flavoured Markdown (tables, task lists,
- *                        strikethrough, autolinks)
- *   rehype-sanitize   → strip dangerous HTML; custom schema extends the
- *                        default allowlist to include GFM table elements,
- *                        task-list checkboxes, images, and className attributes
- *                        required by highlight.js.
- *   rehype-highlight  → syntax-highlight fenced code blocks via highlight.js.
+ *   remark-gfm       → parse GitHub Flavoured Markdown (tables, task lists,
+ *                       strikethrough, autolinks)
+ *   rehype-sanitize  → strip dangerous HTML; custom schema extends the
+ *                       default allowlist to include GFM table elements,
+ *                       task-list checkboxes, images, and className attributes.
  *
  * Custom component overrides:
  *   `a`     — opens external links (http/https) in a new tab with
@@ -20,10 +18,11 @@
  *
  * Constraint: must NOT import from features/ or pages/.
  */
+import React from "react";
+import ReactDOM from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import rehypeHighlight from "rehype-highlight";
 
 /** Props for the `Markdown` component. */
 export type MarkdownProps = {
@@ -36,7 +35,7 @@ export type MarkdownProps = {
 /**
  * Extended rehype-sanitize schema built on top of the library's safe defaults.
  * Spreads `defaultSchema` and then selectively widens the allowlist to
- * support GFM output (tables, task lists) and highlight.js class names.
+ * support GFM output (tables, task lists) and basic styling hooks.
  */
 const sanitizeSchema = {
   ...defaultSchema,
@@ -56,7 +55,7 @@ const sanitizeSchema = {
   ],
   attributes: {
     ...(defaultSchema.attributes ?? {}),
-    // Allow className for highlight.js and basic styling hooks
+    // Allow className for basic styling hooks
     code: [...((defaultSchema.attributes as any)?.code ?? []), "className"],
     span: [...((defaultSchema.attributes as any)?.span ?? []), "className"],
     pre: [...((defaultSchema.attributes as any)?.pre ?? []), "className"],
@@ -85,70 +84,89 @@ const sanitizeSchema = {
   }
 } as const;
 
-const rehypePlugins: any = [
-  [rehypeSanitize, sanitizeSchema],
-  [
-    rehypeHighlight,
-    {
-      // If a fence has no language, highlight.js won't throw; it will auto-detect.
-      // If you prefer no auto-detect, set this to false.
-      detect: true,
-      ignoreMissing: true
-    }
-  ]
-];
+const rehypePlugins: any = [[rehypeSanitize, sanitizeSchema]];
 
 /**
- * Renders a Markdown string as sanitised HTML with syntax highlighting.
+ * Renders a Markdown string as sanitised HTML.
  *
  * @param source    - Raw Markdown string (`null`/`undefined` treated as empty).
  * @param className - Optional CSS class for the outer wrapper element.
  */
 export function Markdown({ source, className }: MarkdownProps) {
-  // Normalise null/undefined to an empty string so ReactMarkdown never
-  // receives a non-string child.
   const value = typeof source === "string" ? source : "";
+  const [lightbox, setLightbox] = React.useState<{ src: string; alt: string } | null>(null);
+
+  React.useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightbox(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox]);
 
   return (
-    <div className={className}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={rehypePlugins}
-        components={{
-          // Custom link renderer: external URLs open in a new tab with
-          // security attributes; same-origin links behave normally.
-          a: ({ href, children, ...props }) => {
-            // Detect external links by checking for an http(s) scheme
-            const isExternal = typeof href === "string" && /^https?:\/\//i.test(href);
-            return (
-              <a
-                href={href}
+    <>
+      <div className={className}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={rehypePlugins}
+          components={{
+            a: ({ href, children, ...props }) => {
+              const isExternal = typeof href === "string" && /^https?:\/\//i.test(href);
+              return (
+                <a
+                  href={href}
+                  {...props}
+                  target={isExternal ? "_blank" : props.target}
+                  rel={isExternal ? "noopener noreferrer" : props.rel}
+                >
+                  {children}
+                </a>
+              );
+            },
+            input: (props) => {
+              const node = (props as any).node as any;
+              const isCheckbox = node?.properties?.type === "checkbox";
+              if (!isCheckbox) return <input {...props} />;
+              return <input {...props} disabled />;
+            },
+            img: ({ src, alt, ...props }) => (
+              <img
+                src={src}
+                alt={alt ?? ""}
                 {...props}
-                target={isExternal ? "_blank" : props.target}
-                // noopener prevents the new tab from accessing window.opener;
-                // noreferrer additionally suppresses the Referer header.
-                rel={isExternal ? "noopener noreferrer" : props.rel}
+                className="cursor-zoom-in"
+                onClick={() => src && setLightbox({ src, alt: alt ?? "" })}
+              />
+            ),
+          }}
+        >
+          {value}
+        </ReactMarkdown>
+      </div>
+
+      {lightbox && typeof document !== "undefined"
+        ? ReactDOM.createPortal(
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+              onClick={() => setLightbox(null)}
+            >
+              <button
+                className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
+                onClick={() => setLightbox(null)}
+                aria-label="Close"
               >
-                {children}
-              </a>
-            );
-          },
-          // Ensure task list checkbox can't be interacted with
-          input: (props) => {
-            // Inspect the underlying HAST node to distinguish task-list
-            // checkboxes (generated by remark-gfm) from other <input> tags.
-            const node = (props as any).node as any;
-            const isCheckbox = node?.properties?.type === "checkbox";
-            if (!isCheckbox) {
-              return <input {...props} />;
-            }
-            // Force task-list checkboxes to be read-only in the rendered output
-            return <input {...props} disabled />;
-          }
-        }}
-      >
-        {value}
-      </ReactMarkdown>
-    </div>
+                ✕
+              </button>
+              <img
+                src={lightbox.src}
+                alt={lightbox.alt}
+                className="max-h-[90vh] max-w-[90vw] w-auto h-auto rounded shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>,
+            document.body
+          )
+        : null}
+    </>
   );
 }

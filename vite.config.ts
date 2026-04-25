@@ -12,7 +12,7 @@ export default defineConfig({
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-i18n": ["i18next", "react-i18next", "i18next-browser-languagedetector"],
-          "vendor-markdown": ["react-markdown", "remark-gfm", "rehype-highlight", "rehype-sanitize", "highlight.js"],
+          "vendor-markdown": ["react-markdown", "remark-gfm", "rehype-sanitize"],
         },
       },
     },

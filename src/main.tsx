@@ -5,7 +5,6 @@
 import { createRoot } from "react-dom/client";
 import { MainApp } from "./router";
 import "./index.css";
-import "highlight.js/styles/github.css";
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Missing #root container.");
