@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useTheme } from "../useTheme";
 
@@ -7,6 +7,10 @@ const THEME_KEY = "app-theme-mode";
 beforeEach(() => {
   localStorage.clear();
   document.documentElement.classList.remove("theme-dark");
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("useTheme", () => {
@@ -45,5 +49,19 @@ describe("useTheme", () => {
     const { result } = renderHook(() => useTheme());
     act(() => result.current.setIsDarkMode(false));
     expect(localStorage.getItem(THEME_KEY)).toBe("light");
+  });
+
+  it("keeps the theme usable when browser storage is unavailable", () => {
+    const unavailableStorage = {
+      getItem: () => { throw new DOMException("Storage is unavailable", "SecurityError"); },
+      setItem: () => { throw new DOMException("Storage is unavailable", "SecurityError"); },
+    } as unknown as Storage;
+    vi.spyOn(window, "localStorage", "get").mockReturnValue(unavailableStorage);
+
+    const { result } = renderHook(() => useTheme());
+
+    expect(result.current.isDarkMode).toBe(false);
+    act(() => result.current.setIsDarkMode(true));
+    expect(document.documentElement.classList.contains("theme-dark")).toBe(true);
   });
 });

@@ -66,8 +66,8 @@ export function Footer({ footerText, activeLocale }: FooterProps) {
 
   return (
     <footer className="relative z-10 border-t border-ink/10 bg-paper/90 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-5 text-sm text-ink/75 sm:px-6 md:px-10">
-        <div className="flex flex-col gap-5 self-stretch sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-4 text-sm text-ink/75 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-x-10 sm:gap-y-6 sm:px-6 md:px-10">
+        <div className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-6">
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-[0.16em] text-ink/55">{footerText.links}</p>
             {/* TODO: replace with your own external links */}
@@ -111,9 +111,15 @@ export function Footer({ footerText, activeLocale }: FooterProps) {
           </div>
         </div>
 
-        <p className="text-center font-medium text-ink/80">
-          {footerText.copyright} {new Date().getFullYear()}
-        </p>
+        <div className="space-y-2 sm:text-right">
+          {/* Invisible spacer matching the column headings' height, so the
+              copyright line below lands level with "Terms of Service /
+              Privacy Policy" instead of under the shorter heading row. */}
+          <p className="hidden text-xs uppercase tracking-[0.16em] sm:block sm:invisible" aria-hidden="true">&nbsp;</p>
+          <p className="font-medium text-ink/80">
+            {footerText.copyright} {new Date().getFullYear()}
+          </p>
+        </div>
       </div>
     </footer>
   );

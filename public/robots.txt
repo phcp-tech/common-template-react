@@ -4,4 +4,3 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://hkc.wiki/sitemap.xml

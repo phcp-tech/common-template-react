@@ -21,5 +21,18 @@ export default defineConfig({
         inline: ["@exodus/bytes"],
       },
     },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      // Set slightly below the measured baseline (not an aspirational target)
+      // so CI catches regressions without starting red on day one. Header,
+      // Footer, and ErrorBoundary still have real coverage gaps to close.
+      thresholds: {
+        statements: 78,
+        branches: 55,
+        functions: 75,
+        lines: 80,
+      },
+    },
   },
 });

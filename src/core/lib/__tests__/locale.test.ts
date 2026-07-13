@@ -38,6 +38,9 @@ describe("getLocaleHref", () => {
 describe("getLocaleFromPath", () => {
   it("infers zh-Hans from /zh/page", () => expect(getLocaleFromPath("/zh/page")).toBe("zh-Hans"));
   it("infers en-US from /en/terms", () => expect(getLocaleFromPath("/en/terms")).toBe("en-US"));
+  it("does not treat a longer first path segment as a locale", () => {
+    expect(getLocaleFromPath("/zhongwen")).toBe("en-US");
+  });
   it("falls back to en-US for bare /", () => expect(getLocaleFromPath("/")).toBe("en-US"));
   it("falls back to en-US for unknown prefix", () => expect(getLocaleFromPath("/fr/page")).toBe("en-US"));
 });
@@ -51,6 +54,11 @@ describe("cookie round-trip", () => {
     setLocaleCookie("en-US");
     expect(getLocaleCookie()).toBe("en-US");
   });
+  it("ignores an unsupported locale cookie", () => {
+    document.cookie = `${COOKIE_LOCALE_KEY}=fr-FR; path=/`;
+    expect(getLocaleCookie()).toBeNull();
+  });
+
   it("returns null when no cookie set", () => {
     expect(getLocaleCookie()).toBeNull();
   });

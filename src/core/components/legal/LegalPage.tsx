@@ -70,7 +70,7 @@ export function LegalPage({ variant, isDarkMode }: LegalPageProps) {
             {t.notFound.goHome}
           </Link>
         </p>
-        <article className="animate-rise-in space-y-8 rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-md backdrop-blur-sm sm:p-8">
+        <article className="animate-rise-in space-y-8 rounded-2xl border border-ink/10 bg-surface/80 p-6 shadow-md backdrop-blur-sm sm:p-8">
           <div className="wmde-markdown-wrapper">
             <Markdown
               source={markdownContent}

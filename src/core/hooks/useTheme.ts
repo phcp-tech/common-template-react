@@ -13,7 +13,11 @@ const THEME_STORAGE_KEY = "app-theme-mode";
 
 function readStoredTheme(): boolean {
   if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
+  try {
+    return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
+  } catch {
+    return false;
+  }
 }
 
 export function useTheme(): { isDarkMode: boolean; setIsDarkMode: (v: boolean) => void } {
@@ -22,10 +26,14 @@ export function useTheme(): { isDarkMode: boolean; setIsDarkMode: (v: boolean) =
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("theme-dark");
-      localStorage.setItem(THEME_STORAGE_KEY, "dark");
     } else {
       document.documentElement.classList.remove("theme-dark");
-      localStorage.setItem(THEME_STORAGE_KEY, "light");
+    }
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, isDarkMode ? "dark" : "light");
+    } catch {
+      // Storage can be disabled by privacy settings or an embedded browser.
     }
   }, [isDarkMode]);
 
