@@ -22,8 +22,10 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
+import i18n from "./core/i18n";
 import { ErrorBoundary } from "./core/components/layout/ErrorBoundary";
 import { RootLayout } from "./core/components/layout/RootLayout";
+import { LoadingSpinner } from "./core/components/ui/LoadingSpinner";
 import {
   getInitialLocale,
   setLocaleCookie,
@@ -33,13 +35,18 @@ import {
 } from "./core/lib/locale";
 import { LOCALE_REGISTRY, LOCALE_LIST } from "./core/lib/locale-registry";
 import { HomePage } from "./pages/HomePage";
-import { LegalPageWrapper } from "./pages/LegalPageWrapper";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import type { Locale } from "./core/types/locale";
 
+// Legal pages pull in react-markdown/remark-gfm/rehype-sanitize (the
+// "vendor-markdown" chunk in vite.config.ts). Lazy-loading keeps that chunk
+// out of the initial route graph so the home route doesn't pay for it.
+const LegalPageWrapper = React.lazy(() =>
+  import("./pages/LegalPageWrapper").then((module) => ({ default: module.LegalPageWrapper }))
+);
+
 function RedirectToLocale() {
   const initialLocale = React.useMemo(() => getInitialLocale(), []);
-  React.useEffect(() => { setLocaleCookie(initialLocale); }, [initialLocale]);
   return <Navigate to={getLocaleHref(initialLocale)} replace />;
 }
 
@@ -60,9 +67,16 @@ function LocaleRoute() {
     (k) => LOCALE_REGISTRY[k].urlPrefix === actualPrefix
   );
 
+  React.useEffect(() => {
+    if (shouldRedirect) return;
+
+    setLocaleCookie(supportedLocale);
+    void i18n.changeLanguage(supportedLocale);
+  }, [shouldRedirect, supportedLocale]);
+
   if (shouldRedirect) {
-    const newPath = location.pathname.replace(/^\/[^\/]+/, `/${supportedPrefix}`);
-    return <Navigate to={newPath} replace />;
+    const newPath = location.pathname.replace(/^\/[^/]+/, `/${supportedPrefix}`);
+    return <Navigate to={`${newPath}${location.search}${location.hash}`} replace />;
   }
 
   return (
@@ -74,14 +88,28 @@ function LocaleRoute() {
 
 export function MainApp() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ErrorBoundary>
         <Routes>
           <Route path="/" element={<RedirectToLocale />} />
           <Route path="/:locale" element={<LocaleRoute />}>
             <Route index element={<HomePage />} />
-            <Route path="terms" element={<LegalPageWrapper variant="terms" />} />
-            <Route path="privacy" element={<LegalPageWrapper variant="privacy" />} />
+            <Route
+              path="terms"
+              element={
+                <React.Suspense fallback={<LoadingSpinner />}>
+                  <LegalPageWrapper variant="terms" />
+                </React.Suspense>
+              }
+            />
+            <Route
+              path="privacy"
+              element={
+                <React.Suspense fallback={<LoadingSpinner />}>
+                  <LegalPageWrapper variant="privacy" />
+                </React.Suspense>
+              }
+            />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage locale={FALLBACK_LOCALE} />} />

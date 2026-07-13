@@ -1,5 +1,5 @@
 /**
- * Date formatting utilities for the HKC web application.
+ * Date formatting utilities for template applications.
  *
  * Layer: core/lib — pure, side-effect-free helpers with no DOM or browser
  * dependencies. Safe to call in SSR and Node environments.

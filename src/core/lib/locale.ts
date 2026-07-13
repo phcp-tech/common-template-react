@@ -56,7 +56,8 @@ export function getLocaleCookie(): Locale | null {
   if (!match) return null;
   // Slice past "app_locale=" and decode any percent-encoded characters
   const value = decodeURIComponent(match.slice(COOKIE_LOCALE_KEY.length + 1));
-  return toSupportedLocale(value);
+  const storedLocale = LOCALE_LIST.find((locale) => locale.toLowerCase() === value.toLowerCase());
+  return storedLocale ?? null;
 }
 
 /**
@@ -115,7 +116,8 @@ export function getInitialLocale(): Locale {
  * @returns The inferred `Locale`.
  */
 export function getLocaleFromPath(pathname: string): Locale {
-  const found = LOCALE_LIST.find((k) => pathname.startsWith(`/${LOCALE_REGISTRY[k].urlPrefix}`));
+  const firstSegment = pathname.split("/").find(Boolean)?.toLowerCase();
+  const found = LOCALE_LIST.find((k) => LOCALE_REGISTRY[k].urlPrefix === firstSegment);
   return found ?? _FALLBACK;
 }
 

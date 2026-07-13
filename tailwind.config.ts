@@ -5,12 +5,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: "#1f2522",
-        paper: "#f7f3ea",
-        jade: "#0f6a63",
+        // ink/paper/surface resolve from CSS variables (see src/index.css) so a
+        // single `.theme-dark` class swap re-themes every consumer at once —
+        // no per-component dark: overrides or !important needed.
+        ink: "rgb(var(--color-ink) / <alpha-value>)",
+        paper: "rgb(var(--color-paper) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        jade: "rgb(var(--color-jade) / <alpha-value>)",
         "jade-700": "#074d48",
-        bronze: "#b27a41",
-        cloud: "#e6e0d4"
+        bronze: "#b27a41"
       },
       boxShadow: {
         wash: "0 18px 50px rgba(31, 37, 34, 0.08)",

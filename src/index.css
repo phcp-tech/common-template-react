@@ -133,56 +133,42 @@
   background-size: 3px 3px;
 }
 
+:root {
+  --color-ink: 31 37 34;
+  --color-paper: 247 243 234;
+  --color-surface: 255 255 255;
+  --color-jade: 15 106 99;
+}
+
 .theme-dark {
-  background-color: #0f1412;
-  color: #e8ecea;
+  --color-ink: 232 236 234;
+  --color-paper: 15 20 18;
+  --color-surface: 20 28 25;
+  /* Lighter teal -- the plain #0f6a63 jade reads fine as an accent on light
+     paper but is too dim as body-adjacent text/headings on a near-black
+     background. */
+  --color-jade: 137 216 201;
 }
 
-.theme-dark [class*="bg-paper"] {
-  background-color: rgba(13, 19, 17, 0.95) !important;
+.theme-dark {
+  background-color: rgb(var(--color-paper));
+  color: rgb(var(--color-ink));
 }
 
-.theme-dark [class*="bg-white"] {
-  background-color: rgba(20, 28, 25, 0.88) !important;
+/* Solid brand buttons (bg-jade + white text) must keep a fixed, darker fill
+   so white text stays legible -- they should NOT lighten along with the
+   jade text/accent color above, or contrast would collapse in dark mode. */
+.theme-dark .bg-jade.text-white {
+  background-color: #0f6a63;
+  border-color: #0f6a63;
 }
 
-.theme-dark [class*="bg-cloud"] {
-  background-color: rgba(34, 44, 40, 0.85) !important;
-}
-
-.theme-dark [class*="bg-jade/10"] {
-  background-color: rgba(21, 106, 99, 0.32) !important;
-}
-
-.theme-dark [class*="bg-bronze/10"] {
-  background-color: rgba(178, 122, 65, 0.28) !important;
-}
-
-.theme-dark [class*="text-ink"] {
-  color: rgba(232, 236, 234, 0.93) !important;
-}
-
-.theme-dark [class*="border-ink"],
-.theme-dark [class*="border-gray"] {
-  border-color: rgba(232, 236, 234, 0.18) !important;
-}
-
-.theme-dark [class*="shadow"] {
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
-}
-
-.theme-dark .topic-chip-inactive {
-  background-color: rgba(22, 30, 27, 0.9) !important;
-  border-color: rgba(226, 234, 230, 0.24) !important;
-  color: rgba(236, 241, 239, 0.94) !important;
-}
-
-.theme-dark .topic-chip-inactive:hover {
-  background-color: rgba(29, 40, 36, 0.96) !important;
-}
-
-.theme-dark .topic-chip-active {
-  box-shadow: 0 0 0 1px rgba(201, 236, 225, 0.28), 0 10px 22px rgba(7, 18, 15, 0.45) !important;
+/* Tailwind's shadow utilities bake in a fixed box-shadow color, so they still
+   need an explicit dark override -- but scoped to the exact classes this
+   template uses, not a `[class*="shadow"]` wildcard. */
+.theme-dark .shadow-md,
+.theme-dark .hover\:shadow-md:hover {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
 }
 
 .theme-dark .footer-link {
@@ -318,24 +304,3 @@
   text-decoration-color: rgba(147, 197, 253, 0.7);
 }
 
-/* Legal page dark mode styles */
-.theme-dark .legal-content h1 {
-  color: #e8ecea !important;
-}
-
-.theme-dark .legal-content h2 {
-  color: #89d8c9 !important;
-}
-
-.theme-dark .legal-content p {
-  color: rgba(232, 236, 234, 0.85) !important;
-}
-
-.theme-dark .legal-content ul,
-.theme-dark .legal-content ol {
-  color: rgba(232, 236, 234, 0.85) !important;
-}
-
-.theme-dark .legal-content li {
-  color: rgba(232, 236, 234, 0.85) !important;
-}

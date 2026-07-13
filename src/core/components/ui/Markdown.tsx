@@ -37,6 +37,9 @@ export type MarkdownProps = {
  * Spreads `defaultSchema` and then selectively widens the allowlist to
  * support GFM output (tables, task lists) and basic styling hooks.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any -- rehype-sanitize's
+   `defaultSchema.attributes`/`protocols` are typed as plain objects, not
+   indexable records, so widening them below requires a cast. */
 const sanitizeSchema = {
   ...defaultSchema,
   tagNames: [
@@ -80,10 +83,14 @@ const sanitizeSchema = {
   protocols: {
     ...(defaultSchema.protocols ?? {}),
     href: [...(((defaultSchema.protocols as any)?.href) ?? []), "http", "https", "mailto"],
-    src: [...(((defaultSchema.protocols as any)?.src) ?? []), "http", "https", "data"]
+    src: [...(((defaultSchema.protocols as any)?.src) ?? []), "http", "https"]
   }
 } as const;
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
+// react-markdown's `rehypePlugins` prop type doesn't accept a plugin tuple
+// typed this precisely; widen just this binding rather than the schema above.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rehypePlugins: any = [[rehypeSanitize, sanitizeSchema]];
 
 /**
@@ -95,12 +102,28 @@ const rehypePlugins: any = [[rehypeSanitize, sanitizeSchema]];
 export function Markdown({ source, className }: MarkdownProps) {
   const value = typeof source === "string" ? source : "";
   const [lightbox, setLightbox] = React.useState<{ src: string; alt: string } | null>(null);
+  const triggerRef = React.useRef<HTMLElement | null>(null);
+  const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
+
+  const openImagePreview = (src: string, alt: string) => {
+    triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setLightbox({ src, alt });
+  };
 
   React.useEffect(() => {
     if (!lightbox) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightbox(null); };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    closeButtonRef.current?.focus();
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      requestAnimationFrame(() => {
+        const currentTrigger = Array.from(document.querySelectorAll<HTMLElement>("[data-markdown-image-src]")).find(
+          (element) => element.dataset.markdownImageSrc === lightbox.src
+        );
+        (currentTrigger ?? triggerRef.current)?.focus();
+      });
+    };
   }, [lightbox]);
 
   return (
@@ -124,6 +147,9 @@ export function Markdown({ source, className }: MarkdownProps) {
               );
             },
             input: (props) => {
+              // react-markdown injects a hast `node` prop that isn't part of
+              // the public JSX.IntrinsicElements["input"] type.
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const node = (props as any).node as any;
               const isCheckbox = node?.properties?.type === "checkbox";
               if (!isCheckbox) return <input {...props} />;
@@ -134,15 +160,28 @@ export function Markdown({ source, className }: MarkdownProps) {
                 {children}
               </pre>
             ),
-            img: ({ src, alt, ...props }) => (
-              <img
-                src={src}
-                alt={alt ?? ""}
-                {...props}
-                className="max-w-full h-auto cursor-zoom-in"
-                onClick={() => src && setLightbox({ src, alt: alt ?? "" })}
-              />
-            ),
+            img: ({ src, alt, node: _node, ...props }) => {
+              const imageAlt = alt ?? "";
+              return (
+                <img
+                  src={src}
+                  alt={imageAlt}
+                  {...props}
+                  role="button"
+                  data-markdown-image-src={src}
+                  tabIndex={0}
+                  aria-label={`Open image preview${imageAlt ? `: ${imageAlt}` : ""}`}
+                  className="max-w-full h-auto cursor-zoom-in"
+                  onClick={() => src && openImagePreview(src, imageAlt)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      if (src) openImagePreview(src, imageAlt);
+                    }
+                  }}
+                />
+              );
+            },
           }}
         >
           {value}
@@ -153,9 +192,20 @@ export function Markdown({ source, className }: MarkdownProps) {
         ? ReactDOM.createPortal(
             <div
               className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Image preview${lightbox.alt ? `: ${lightbox.alt}` : ""}`}
               onClick={() => setLightbox(null)}
+              onKeyDown={(event) => {
+                if (event.key === "Tab") {
+                  event.preventDefault();
+                  closeButtonRef.current?.focus();
+                }
+              }}
             >
               <button
+                ref={closeButtonRef}
+                type="button"
                 className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
                 onClick={() => setLightbox(null)}
                 aria-label="Close"

@@ -3,6 +3,7 @@
  * No SSR hydration in the template; use createRoot unconditionally.
  */
 import { createRoot } from "react-dom/client";
+import { registerSW } from "virtual:pwa-register";
 import { MainApp } from "./router";
 import "./index.css";
 
@@ -11,8 +12,4 @@ if (!container) throw new Error("Missing #root container.");
 
 createRoot(container).render(<MainApp />);
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
-  });
-}
+registerSW({ immediate: true });

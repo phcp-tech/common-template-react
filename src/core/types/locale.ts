@@ -1,5 +1,5 @@
 /**
- * Canonical locale type definitions for the HKC web application.
+ * Canonical locale type definitions for template applications.
  *
  * Layer: core/types — foundational type primitives shared across every layer.
  * Types are now derived from `locale-registry.ts` — add locales there.
