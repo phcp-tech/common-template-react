@@ -1,8 +1,10 @@
 # common-template-react
 
-A production-ready React frontend template with multi-locale support (zh-Hans / en-US), dark mode, PWA, locale-prefixed routing, and legal pages.
+<p align="center">
+  <a href="./README.md">English</a> | <a href="./README.zh.md">简体中文</a>
+</p>
 
-The `core/` layer is fully portable — zero business-domain coupling, copy it to any new project.
+A production-ready React frontend template with multi-locale support (zh-Hans / en-US), dark mode, PWA, locale-prefixed routing, and legal pages.
 
 ## Stack
 
@@ -17,6 +19,8 @@ The `core/` layer is fully portable — zero business-domain coupling, copy it t
 | PWA | Service worker + Web App Manifest |
 
 ## Project Structure
+
+The `core/` layer is fully portable — zero business-domain coupling, copy it to any new project.
 
 ```
 src/
