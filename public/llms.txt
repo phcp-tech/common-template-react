@@ -1,0 +1,10 @@
+# My App
+
+> Replace this line with a one-sentence summary of your app.
+
+Replace this paragraph with what the app does and who it is for. AI agents read this file first, and the pages below render only with JavaScript, so put the key facts here. The site is in English (`/en/`) and Chinese (`/zh/`).
+
+## Pages
+
+- [Home](en/): English
+- [首页](zh/): 中文

@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Keep in sync with vite.config.ts VitePWA manifest.theme_color. -->
+    <!-- Keep in sync with public/manifest.webmanifest theme_color. -->
     <meta name="theme-color" content="#0f6a63" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="My App" />
-    <link rel="icon" href="%BASE_URL%favicon.ico" sizes="any" />
-    <link rel="apple-touch-icon" href="%BASE_URL%logo192.png" />
+    <!-- Root-absolute: Vite adds the base path in dev and build. %BASE_URL% here doubles it in dev. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
     <script>
       (() => {
         try {

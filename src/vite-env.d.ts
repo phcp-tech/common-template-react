@@ -13,4 +13,3 @@
  *   - Do not add runtime code here — it is a pure ambient declaration file.
  */
 /// <reference types="vite/client" />
-/// <reference types="vite-plugin-pwa/client" />

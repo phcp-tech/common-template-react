@@ -4,7 +4,7 @@
   <a href="./README.md">English</a> | <a href="./README.zh.md">简体中文</a>
 </p>
 
-A production-ready React frontend template with multi-locale support (zh-Hans / en-US), dark mode, PWA, locale-prefixed routing, and legal pages.
+A production-ready React frontend template with multi-locale support (zh-Hans / en-US), dark mode, a Web App Manifest, locale-prefixed routing, and legal pages.
 
 ## Stack
 
@@ -16,7 +16,7 @@ A production-ready React frontend template with multi-locale support (zh-Hans / 
 | i18n | i18next + react-i18next + static `messages` map |
 | Routing | react-router-dom 7 (locale-prefixed URLs `/en/...`, `/zh/...`) |
 | Testing | Vitest + @testing-library/react + happy-dom |
-| PWA | Service worker + Web App Manifest |
+| Home screen | Web App Manifest (no service worker by default) |
 
 ## Project Structure
 
@@ -76,10 +76,10 @@ npm run preview      # Preview production build locally
 ### Replace branding
 
 - `index.html` — `<title>` and `apple-mobile-web-app-title`
-- `public/manifest.json` — `name` and `short_name`
-  The PWA manifest is generated from `vite.config.ts`; configure `VITE_APP_NAME` and `VITE_APP_SHORT_NAME` instead of adding a static manifest file.
+- `public/manifest.webmanifest` — `name`, `short_name`, `theme_color` (same as `<meta name="theme-color">`) and `background_color` (the light-mode page colour, shown on the Android launch screen)
 - `public/logo192.png`, `public/logo512.png` — app icons
 - `src/core/i18n/en-us.ts` and `zh-hans.ts` — `header.title`
+- `public/llms.txt` — the app summary for AI agents (see [llms.txt](#llmstxt))
 
 ### Update legal pages
 
@@ -119,6 +119,7 @@ before wiring up the first feature that calls a backend.
 | Inline `<head>` script reads `app-theme-mode` | Runs before first paint — prevents theme flash without server involvement |
 | `app_locale` / `app-theme-mode` storage keys | Generic names avoid collisions when projects share a domain |
 | `ink`/`paper`/`surface` colors resolve from CSS variables (`src/index.css`) | A single `.theme-dark` class swaps every consumer's colors at once — no per-component `dark:` classes, `!important`, or `[class*="..."]` overrides |
+| Language switcher is a native `<select>`, not a custom popup | Keyboard and screen-reader support come from the browser, with no extra code |
 | Legal routes (`/terms`, `/privacy`) are `React.lazy`-loaded | Keeps `react-markdown`/`remark-gfm`/`rehype-sanitize` (the `vendor-markdown` chunk) out of the initial route graph |
 | `VITE_API_BASE_URL` is defined but unread by `core`/`pages` | Reserved for your project's own data-fetching layer under `features/`; no HTTP client/query library is opinionated for you (see Customisation Guide) |
 
@@ -133,16 +134,23 @@ npx vitest run src/core/lib/__tests__/
 npx vitest run src/core/i18n/__tests__/
 npx vitest run src/core/hooks/__tests__/
 ```
-## PWA and deployment
+## llms.txt
 
-`vite-plugin-pwa` generates the web manifest and Workbox service worker during production builds. The generated worker precaches the application shell and hashed Vite assets, so installed clients can reopen the SPA offline.
+The pages render only with JavaScript, so an AI agent that fetches them gets an empty `<div id="root">`. `public/llms.txt` ([llmstxt.org](https://llmstxt.org)) gives agents the key facts instead: what the app is and links to its pages. Edit it for your project. Keep its links relative (no leading `/`), so they work under any base path.
 
-- Set `VITE_APP_NAME` and `VITE_APP_SHORT_NAME` for product branding.
-- Set `VITE_PUBLIC_BASE_PATH` to `/` (default) or a trailing-slash subpath such as `/portal/` before building for a non-root deployment.
+The template has no `llms-full.txt` (the full text of the site in one file). Its content comes from each project's own sources (Markdown docs, JSON data, i18n strings), so a project with real content adds its own generator: one that the dev server serves and the build writes to `dist/`, so it never drifts from the source.
 
-```bash
-VITE_APP_NAME="Product Name" VITE_APP_SHORT_NAME="Product" npm run build:prod
-```
+## Manifest, offline support and deployment
+
+`public/manifest.webmanifest` gives the site a home-screen icon and, on Android, a launch screen (`display: standalone`). Its URLs are relative, so it works under any base path.
+
+The template has no service worker. Showcase and content sites do not need one: HTTP caching of the hashed `/assets/*` files is enough, and a deployed service worker is hard to remove (it keeps running in returning visitors' browsers after you delete it). Add one only when users need the app offline, push notifications or background sync:
+
+1. `npm install --save-dev vite-plugin-pwa`
+2. In `vite.config.ts`, add `VitePWA({ manifest: false, injectRegister: false, registerType: "autoUpdate", workbox: { cleanupOutdatedCaches: true } })` to `plugins` (`manifest: false` keeps the static manifest).
+3. In `src/main.tsx`, call `registerSW({ immediate: true })` from `virtual:pwa-register`, and add `/// <reference types="vite-plugin-pwa/client" />` to `src/vite-env.d.ts`.
+
+Set `VITE_PUBLIC_BASE_PATH` to `/` (default) or a trailing-slash subpath such as `/portal/` before building for a non-root deployment.
 
 The template intentionally does not ship a sitemap for an unrelated domain. Add a product-specific sitemap and canonical/SEO metadata as part of deployment.
 

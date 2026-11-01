@@ -4,7 +4,7 @@
   <a href="./README.md">English</a> | <a href="./README.zh.md">简体中文</a>
 </p>
 
-一个生产可用的 React 前端模板，内置多语言支持（zh-Hans / en-US）、深色模式、PWA、带语言前缀的路由，以及法律声明页面。
+一个生产可用的 React 前端模板，内置多语言支持（zh-Hans / en-US）、深色模式、Web App Manifest、带语言前缀的路由，以及法律声明页面。
 
 ## 技术栈
 
@@ -16,7 +16,7 @@
 | 国际化 | i18next + react-i18next + 静态 `messages` 映射表 |
 | 路由 | react-router-dom 7（带语言前缀的 URL，如 `/en/...`、`/zh/...`） |
 | 测试 | Vitest + @testing-library/react + happy-dom |
-| PWA | Service worker + Web App Manifest |
+| 主屏幕 | Web App Manifest（默认不带 Service Worker） |
 
 ## 项目结构
 
@@ -76,10 +76,10 @@ npm run preview      # 本地预览生产构建产物
 ### 替换品牌信息
 
 - `index.html` —— `<title>` 和 `apple-mobile-web-app-title`
-- `public/manifest.json` —— `name` 和 `short_name`
-  PWA manifest 是由 `vite.config.ts` 生成的；配置 `VITE_APP_NAME` 和 `VITE_APP_SHORT_NAME` 即可，不需要另外新增一份静态 manifest 文件。
+- `public/manifest.webmanifest` —— `name`、`short_name`、`theme_color`（与 `<meta name="theme-color">` 一致）和 `background_color`（浅色模式的页面背景色，显示在 Android 启动画面上）
 - `public/logo192.png`、`public/logo512.png` —— 应用图标
 - `src/core/i18n/en-us.ts` 和 `zh-hans.ts` —— `header.title`
+- `public/llms.txt` —— 给 AI 代理看的应用简介（见 [llms.txt](#llmstxt)）
 
 ### 更新法律声明页面
 
@@ -116,6 +116,7 @@ API 地址（或者通过你的 CI/托管平台的环境变量配置按部署环
 | `<head>` 内联脚本读取 `app-theme-mode` | 在首次绘制之前执行——不需要服务端参与就能避免主题闪烁 |
 | `app_locale` / `app-theme-mode` 存储键名 | 用通用命名，避免多个项目共用同一域名时发生冲突 |
 | `ink`/`paper`/`surface` 颜色通过 CSS 变量解析（`src/index.css`） | 只需切换一个 `.theme-dark` class 就能一次性换掉所有消费方的颜色——不需要给每个组件单独写 `dark:` class、`!important` 或 `[class*="..."]` 之类的覆盖 |
+| 语言切换用原生 `<select>`，不用自定义弹出菜单 | 浏览器自带键盘和读屏软件支持，不需要额外代码 |
 | `/terms`、`/privacy` 这两条法律声明路由用 `React.lazy` 懒加载 | 让 `react-markdown`/`remark-gfm`/`rehype-sanitize`（即 `vendor-markdown` 分包）不出现在首屏路由图里 |
 | `VITE_API_BASE_URL` 已定义但 `core`/`pages` 都不读取它 | 留给你自己在 `features/` 下添加的数据请求层用；不替你预设任何 HTTP 客户端/请求库的立场（见上面的定制指南） |
 
@@ -130,16 +131,23 @@ npx vitest run src/core/lib/__tests__/
 npx vitest run src/core/i18n/__tests__/
 npx vitest run src/core/hooks/__tests__/
 ```
-## PWA 与部署
+## llms.txt
 
-`vite-plugin-pwa` 会在生产构建时生成 web manifest 和基于 Workbox 的 service worker。生成的 worker 会预缓存应用外壳和带哈希的 Vite 静态资源，这样已安装的客户端可以离线重新打开这个 SPA。
+页面只有在 JavaScript 运行后才有内容，所以 AI 代理直接抓取页面时只能拿到空的 `<div id="root">`。`public/llms.txt`（[llmstxt.org](https://llmstxt.org)）把关键信息提供给代理：说明应用是什么，并链接到各页面。请按你的项目修改。链接要保持相对路径（不以 `/` 开头），这样部署在任何基础路径下都能用。
 
-- 设置 `VITE_APP_NAME` 和 `VITE_APP_SHORT_NAME` 来配置产品品牌信息。
-- 如果不是部署在根路径下，构建前把 `VITE_PUBLIC_BASE_PATH` 设为 `/`（默认值）或者一个以斜杠结尾的子路径，比如 `/portal/`。
+模板不带 `llms-full.txt`（把全站内容放在一个文件里）。它的内容来自每个项目自己的数据源（Markdown 文档、JSON 数据、i18n 文案），所以有真实内容的项目要自己加生成器：开发服务器直接提供它，构建时写入 `dist/`，这样它始终和数据源一致。
 
-```bash
-VITE_APP_NAME="Product Name" VITE_APP_SHORT_NAME="Product" npm run build:prod
-```
+## Manifest、离线功能与部署
+
+`public/manifest.webmanifest` 提供主屏幕图标，在 Android 上还提供启动画面（`display: standalone`）。它使用相对路径，所以部署在任何基础路径下都能工作。
+
+模板不带 Service Worker。展示网站和内容网站不需要它：带 hash 的 `/assets/*` 文件用 HTTP 缓存就够了。而且 Service Worker 一旦上线就很难撤掉：删掉之后，它仍会在老用户的浏览器里运行。只有用户需要离线使用、推送通知或后台同步时才加：
+
+1. `npm install --save-dev vite-plugin-pwa`
+2. 在 `vite.config.ts` 的 `plugins` 里加 `VitePWA({ manifest: false, injectRegister: false, registerType: "autoUpdate", workbox: { cleanupOutdatedCaches: true } })`。`manifest: false` 表示继续使用静态 manifest。
+3. 在 `src/main.tsx` 里从 `virtual:pwa-register` 导入并调用 `registerSW({ immediate: true })`，在 `src/vite-env.d.ts` 里加 `/// <reference types="vite-plugin-pwa/client" />`。
+
+如果不是部署在根路径下，构建前把 `VITE_PUBLIC_BASE_PATH` 设为 `/`（默认值）或者一个以斜杠结尾的子路径，比如 `/portal/`。
 
 这个模板故意不附带某个具体域名的 sitemap。请在部署时自行添加针对具体产品的 sitemap 以及 canonical/SEO 元数据。
 
