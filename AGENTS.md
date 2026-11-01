@@ -4,7 +4,7 @@ Guidance for AI coding agents (Claude Code, etc.) when working in this repositor
 
 ## Overview
 
-React 19 + TypeScript frontend template (Vite 7): locale-prefixed routing (`/en/...`, `/zh/...` via react-router-dom 7), i18next-backed i18n, Tailwind CSS 3 dark mode driven entirely by CSS variables, and a PWA manifest/service worker via `vite-plugin-pwa`. The `core/` layer (layout, theming, i18n, locale utilities, legal pages) is meant to be business-logic-free and portable to any new project as-is; real product code goes under `features/`, wired up through thin wrappers in `pages/`.
+React 19 + TypeScript frontend template (Vite 7): locale-prefixed routing (`/en/...`, `/zh/...` via react-router-dom 7), i18next-backed i18n, Tailwind CSS 3 dark mode driven entirely by CSS variables, and a static Web App Manifest (`public/manifest.webmanifest`: home-screen icon and launch screen; no service worker by default). The `core/` layer (layout, theming, i18n, locale utilities, legal pages) is meant to be business-logic-free and portable to any new project as-is; real product code goes under `features/`, wired up through thin wrappers in `pages/`.
 
 ## Commands
 
@@ -28,5 +28,6 @@ npm run check            # lint + test:coverage + build:prod — same as CI
 - **Coverage thresholds in `vitest.config.ts` (78/55/75/80) are set *below* the currently-measured baseline on purpose**, not as an aspirational target — the comment there says so explicitly, and `Header`/`Footer`/`ErrorBoundary` are called out as having real, still-open coverage gaps. Don't read a passing `test:coverage` run as "this app is well-tested everywhere."
 - **`VITE_API_BASE_URL` is defined in both `.env.development`/`.env.production` but is not read anywhere under `src/`.** There is deliberately no HTTP client, fetch wrapper, or query library (no axios, no TanStack Query/SWR) — that choice is left to whatever a real project adds under `features/`, since it depends on that product's backend/auth scheme.
 - Legal pages (`/terms`, `/privacy`) are the only `React.lazy`-loaded routes, specifically to keep `react-markdown`/`remark-gfm`/`rehype-sanitize` (the `vendor-markdown` Rollup chunk in `vite.config.ts`) out of the initial route graph — the home route shouldn't pay for a markdown renderer it doesn't use. The markdown files themselves are imported via Vite's `?raw` at build time, so there's no runtime fetch for legal content either.
+- `public/llms.txt` is hand-written. Keep its links relative (no leading `/`) so they follow `VITE_PUBLIC_BASE_PATH`. There is deliberately no `llms-full.txt`: its content depends on each derived project's own sources, so that project generates it at build time (never hand-copied, which drifts).
 - `vite.config.ts` deliberately omits `build.manifest` — that option only matters for SSR-prerender pipelines that need to look up hashed asset filenames, and this template is a pure client-rendered SPA.
 - ESLint's `no-unused-vars` is configured with `argsIgnorePattern`/`varsIgnorePattern: "^_"` — an intentionally-unused parameter or destructured variable should be prefixed with `_` rather than disabled inline.
