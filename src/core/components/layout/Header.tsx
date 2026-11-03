@@ -14,10 +14,11 @@
  */
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
-import { localeLabels, localeList, messages } from "../../i18n";
+import { messages } from "../../i18n";
 import { getLocaleHref } from "../../lib/locale";
 import { LOCALE_REGISTRY } from "../../lib/locale-registry";
 import type { Locale } from "../../types/locale";
+import { LocaleMenu } from "../ui/LocaleMenu";
 
 export type HeaderProps = {
   activeLocale: Locale;
@@ -80,21 +81,11 @@ export function Header({ activeLocale, isDarkMode, setIsDarkMode, currentPage }:
             <span className="theme-toggle-icon-night"><Moon className="h-6 w-6 fill-current" /></span>
           </button>
 
-          <div className="relative flex items-center rounded-full border border-ink/15 bg-surface/70 px-2.5 py-1.5 backdrop-blur sm:px-3 sm:py-2">
-            <label htmlFor="locale-switcher" className="sr-only">{t.header.localeLabel}</label>
-            <select
-              id="locale-switcher"
-              value={activeLocale}
-              onChange={(event) => handleLocaleChange(event.target.value as Locale)}
-              className="min-w-[114px] rounded-md bg-surface/90 px-2 py-1 text-xs text-ink outline-none hover:text-jade"
-            >
-              {localeList.map((item) => (
-                <option key={item} value={item}>
-                  {localeLabels[item]}
-                </option>
-              ))}
-            </select>
-          </div>
+          <LocaleMenu
+            activeLocale={activeLocale}
+            label={t.header.localeLabel}
+            onChange={handleLocaleChange}
+          />
         </div>
       </div>
     </header>

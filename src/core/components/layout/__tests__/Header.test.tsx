@@ -17,6 +17,6 @@ describe("Header", () => {
     );
 
     expect(screen.getByRole("button", { name: "Dark mode" })).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getByRole("combobox", { name: "Language" })).toHaveValue("en-US");
+    expect(screen.getByRole("button", { name: "Language" })).toHaveTextContent("English (US)");
   });
 });
